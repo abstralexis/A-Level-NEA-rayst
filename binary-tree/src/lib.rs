@@ -3,6 +3,15 @@
 
 use std::rc::Rc;
 use std::cell::RefCell;
+use anyhow::{Result, anyhow};
+
+/// This is the enum for the direction of the nodes. It
+/// allows us to traverse using types that are named
+/// rather than using magic values.
+pub enum Direction {
+    Left,
+    Right,
+}
 
 /// Node reference type. Gets a new reference on a clone.
 pub type NodeRef<T> = Rc<RefCell<Node<T>>>;
@@ -27,6 +36,37 @@ impl<T> Node<T> {
         }
     }
 
+    pub fn create_child(&mut self, value: T, direction: Direction) -> Result<()> {
+        match direction {
+            Direction::Left => {
+                match self.left {
+                    Some(_) => return Err(anyhow!("Failed to override occupied child.")),
+                    None => {
+                        self.left = Some(Node::new(value).noderef());
+                        return Ok(()); 
+                    }
+                }
+            },
+            Direction::Right => {
+                match self.right {
+                    Some(_) => return Err(anyhow!("Failed to override occupied child.")),
+                    None => {
+                        self.right = Some(Node::new(value).noderef());
+                        return Ok(()); 
+                    }
+                }
+            },
+        };
+    }
+
+    /// Returns whether the current node has a child node.
+    pub fn is_leaf(&self) -> bool {
+        match (self.left.clone(), self.right.clone()) {
+            (None, None) => true,
+            _ => false,
+        }
+    }
+
     /// Get a clonable, interior-mutable reference to self.
     pub fn noderef(self) -> NodeRef<T> {
         Rc::new(RefCell::new(self))
@@ -47,4 +87,29 @@ mod tests {
         assert!(Node::new(10).noderef() == Rc::new(RefCell::new(Node::new(10))))
     }
 
+    #[test]
+    fn create_child() {
+        let mut a = Node::new(10);
+        a.create_child(20, Direction::Left).expect("");
+
+        let b = Node {
+            value: 10,
+            left: Some(Node {
+                value: 20,
+                left: None,
+                right: None,
+            }.noderef()),
+            right: None,
+        };
+
+        assert!(a == b)
+    }
+
+    #[test]
+    fn is_leaf() {
+        let mut root = Node::new(1);
+        root.create_child(2, Direction::Left).unwrap();
+        assert!(root.is_leaf() == false);
+        assert!(root.left.unwrap().borrow().is_leaf() == true);
+    }
 }
