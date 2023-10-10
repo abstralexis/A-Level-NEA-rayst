@@ -67,6 +67,20 @@ impl<T> Node<T> {
         }
     }
 
+    // Get an optional reference to a child of self, dependent on direction.
+    pub fn get_child_reference(&self, direction: Direction) -> Option<NodeRef<T>> {
+        match direction {
+            Direction::Left => match &self.left {
+                Some(child) => Some(child.clone()),
+                None => None,
+            },
+            Direction::Right => match &self.right {
+                Some(child) => Some(child.clone()),
+                None => None,
+            },
+        }
+    }
+
     /// Get a clonable, interior-mutable reference to self.
     pub fn noderef(self) -> NodeRef<T> {
         Rc::new(RefCell::new(self))
