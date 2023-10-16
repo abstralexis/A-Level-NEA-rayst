@@ -36,6 +36,8 @@ impl<T> Node<T> {
         }
     }
 
+    /// Create a child node of self with a value in a certain direction, provided
+    /// that the node does not have a child in that direction already.
     pub fn create_child(&mut self, value: T, direction: Direction) -> Result<()> {
         match direction {
             Direction::Left => {
@@ -67,7 +69,7 @@ impl<T> Node<T> {
         }
     }
 
-    // Get an optional reference to a child of self, dependent on direction.
+    /// Get an optional reference to a child of self, dependent on direction.
     pub fn get_child_reference(&self, direction: Direction) -> Option<NodeRef<T>> {
         match direction {
             Direction::Left => match &self.left {
