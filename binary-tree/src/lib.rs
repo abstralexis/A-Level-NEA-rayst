@@ -4,10 +4,12 @@
 use std::rc::Rc;
 use std::cell::RefCell;
 use anyhow::{Result, anyhow};
+use serde::{Serialize, Deserialize};
 
 /// This is the enum for the direction of the nodes. It
 /// allows us to traverse using types that are named
 /// rather than using magic values.
+#[derive(Serialize, Deserialize)]
 pub enum Direction {
     Left,
     Right,
@@ -20,7 +22,7 @@ pub type NodeRef<T> = Rc<RefCell<Node<T>>>;
 /// binary trees. Always contains a value T, and can 
 /// have 0-2 child nodes, as indicated by the Option<>
 /// type.
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize)]
 pub struct Node<T> {
     value: T,
     left: Option<NodeRef<T>>,
