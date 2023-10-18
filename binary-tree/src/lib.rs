@@ -1,10 +1,9 @@
-/// This crate provides a binary tree structure for
-/// this project. 
-
-use std::rc::Rc;
+use anyhow::{anyhow, Result};
+use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
-use anyhow::{Result, anyhow};
-use serde::{Serialize, Deserialize};
+/// This crate provides a binary tree structure for
+/// this project.
+use std::rc::Rc;
 
 /// This is the enum for the direction of the nodes. It
 /// allows us to traverse using types that are named
@@ -19,7 +18,7 @@ pub enum Direction {
 pub type NodeRef<T> = Rc<RefCell<Node<T>>>;
 
 /// The main node struct that allows for construction of
-/// binary trees. Always contains a value T, and can 
+/// binary trees. Always contains a value T, and can
 /// have 0-2 child nodes, as indicated by the Option<>
 /// type.
 #[derive(Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize)]
@@ -42,22 +41,18 @@ impl<T> Node<T> {
     /// that the node does not have a child in that direction already.
     pub fn create_child(&mut self, value: T, direction: Direction) -> Result<()> {
         match direction {
-            Direction::Left => {
-                match self.left {
-                    Some(_) => return Err(anyhow!("Failed to override occupied child.")),
-                    None => {
-                        self.left = Some(Node::new(value).noderef());
-                        return Ok(()); 
-                    }
+            Direction::Left => match self.left {
+                Some(_) => return Err(anyhow!("Failed to override occupied child.")),
+                None => {
+                    self.left = Some(Node::new(value).noderef());
+                    return Ok(());
                 }
             },
-            Direction::Right => {
-                match self.right {
-                    Some(_) => return Err(anyhow!("Failed to override occupied child.")),
-                    None => {
-                        self.right = Some(Node::new(value).noderef());
-                        return Ok(()); 
-                    }
+            Direction::Right => match self.right {
+                Some(_) => return Err(anyhow!("Failed to override occupied child.")),
+                None => {
+                    self.right = Some(Node::new(value).noderef());
+                    return Ok(());
                 }
             },
         };
@@ -97,7 +92,14 @@ mod tests {
 
     #[test]
     fn new_node() {
-        assert!(Node::new(10) == Node{ value: 10, left: None, right: None })
+        assert!(
+            Node::new(10)
+                == Node {
+                    value: 10,
+                    left: None,
+                    right: None
+                }
+        )
     }
 
     #[test]
@@ -112,11 +114,14 @@ mod tests {
 
         let b = Node {
             value: 10,
-            left: Some(Node {
-                value: 20,
-                left: None,
-                right: None,
-            }.noderef()),
+            left: Some(
+                Node {
+                    value: 20,
+                    left: None,
+                    right: None,
+                }
+                .noderef(),
+            ),
             right: None,
         };
 
