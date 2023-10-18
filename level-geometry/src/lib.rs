@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 use anyhow::anyhow;
 use glam::Vec3;
 use serde::{Deserialize, Serialize};
@@ -14,7 +15,7 @@ pub trait Line {
     /// should they intersect. Checks if parallel, and if the calculated
     /// intersection point falls beyond the bounds of the wall
     /// defined in self.
-    fn split_by<T: Line>(&self, line: T) -> Option<(Seg, Seg)>;
+    fn split_by<T: Line+ Clone>(&self, line: T) -> Option<(Seg, Seg)>;
     /// Checks if this line is parallel to another line based
     /// off of an equation generated for each line according
     /// to their x and z coordinates.
@@ -27,6 +28,7 @@ pub trait Line {
 }
 
 /// A seg is a portion of a linedef
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct Seg {
     points: (Vec3, Vec3),
     height: f32,
@@ -52,16 +54,35 @@ impl Line for Seg {
             self.points.1 + Vec3::from((0f32, 0f32, self.height)),
         )
     }
-
-    fn split_by<T: Line>(&self, line: T) -> Option<(Seg, Seg)> {
-        todo!()
-    }
-
+    
     fn intersects<T: Line>(&self, line: T) -> bool {
-        todo!()
+        self.xz_gradient() == line.xz_gradient()
     }
 
     fn xz_gradient(&self) -> f32 {
         (self.points.1.z - self.points.0.z) / (self.points.1.x - self.points.0.x)
+    }
+
+    fn split_by<T: Line + Clone>(&self, line: T) -> Option<(Seg, Seg)> {
+        match self.intersects(line.clone()) {
+            false => None,
+            true => {
+                let x = (-self.xz_gradient() * self.points().0.x
+                    + line.xz_gradient() * self.points().0.x
+                    + self.points().0.z
+                    - line.points().0.z)
+                    / (line.xz_gradient() - self.xz_gradient());
+                let z = self.xz_gradient() * (x - self.points().0.x) + self.points().0.z;
+                let y = self.points().0.y;
+                let intersection_point = Vec3::from((x, y, z));
+
+                Some (
+                    (
+                        Seg::new((self.points().0, intersection_point), self.height),
+                        Seg::new((intersection_point, self.points().1), self.height)
+                    )
+                ) 
+            }
+        }
     }
 }
