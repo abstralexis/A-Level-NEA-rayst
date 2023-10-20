@@ -1,3 +1,5 @@
+use std::{f32::consts::PI, mem::swap};
+
 #[allow(unused_imports)]
 use anyhow::anyhow;
 use glam::Vec3;
@@ -25,6 +27,10 @@ pub trait Line {
     fn get_corners(&self) -> (Vec3, Vec3, Vec3, Vec3);
     /// Returns the gradient of the current line for the x, z plane
     fn xz_gradient(&self) -> f32;
+    /// Return the normal unit vector to self
+    fn normal(&self) -> Vec3;
+    /// Swap the point order of the line
+    fn flip(&mut self);
 }
 
 /// A seg is a portion of a linedef
@@ -94,6 +100,20 @@ impl Line for Seg {
             }
         }
     }
+
+    fn normal(&self) -> Vec3 {
+        // Get the vector defining self based off of the first point
+        let line_vector = self.points().0 - self.points().1;
+        // Rotate that vector using the y axis by 90 degrees
+        let rotation = glam::Mat3::from_rotation_y(PI / 2f32);
+        let perpendicular: Vec3 = rotation * line_vector;
+        // Return the unit vector of this vector
+        perpendicular.normalize_or_zero()
+    }
+
+    fn flip(&mut self) {
+        swap(&mut self.points.0, &mut self.points.1);
+    }
 }
 
 mod tests {
@@ -103,10 +123,8 @@ mod tests {
     /// have to rewrite the same definitions over and over.
     /// 0 is the default, 1 is parallel, 2 will intersect.
     /// Notably though, 3 would intersect based off of gradient but
-    /// the lengths mean a bug occurs. Should we combat this with checks
-    /// or assume that we will only be using it with lines we know are not
-    /// wholly in front nor wholly behind? That would make no sense of course,
-    /// because we already check for whether it is parallel.   
+    /// the lengths could mean a bug occurs. We have now combatted this
+    /// with a unit test for it and a fix to make the test pass.
     #[allow(dead_code)]
     fn init() -> (Seg, Seg, Seg, Seg) {
         let height = 10f32;
@@ -185,5 +203,30 @@ mod tests {
         let split = seg0.split_by(seg3);
         dbg!(&split);
         assert!(split.is_none() == true)
+    }
+
+    #[test]
+    fn flip() {
+        let (mut seg0, _, _, _) = init();
+        seg0.flip();
+        assert!(
+            seg0 == Seg::new(
+                (
+                    Vec3::from((1f32, 0f32, 1f32)),
+                    Vec3::from((0f32, 0f32, 0f32)),
+                ),
+                10f32,
+            )
+        )
+    }
+
+    #[test]
+    fn normal_swap() {
+        let (mut seg0, _, _, _) = init();
+
+        let mut flip_seg0 = seg0.clone();
+        flip_seg0.flip();
+
+        assert!(seg0.normal() != flip_seg0.normal())
     }
 }
