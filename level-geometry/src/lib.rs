@@ -5,6 +5,16 @@ use anyhow::anyhow;
 use glam::Vec3;
 use serde::{Deserialize, Serialize};
 
+/// Enum with types to represent the side
+/// determination that we need for
+/// binary space partitioning.
+#[derive(PartialEq, Debug)]
+pub enum Side {
+    Front,
+    Back,
+    Neither,
+}
+
 /// The trait that defines the properties of a line.
 pub trait Line {
     /// The points that define the x, y, and z coordinates of
@@ -31,6 +41,9 @@ pub trait Line {
     fn normal(&self) -> Vec3;
     /// Swap the point order of the line
     fn flip(&mut self);
+    /// Determine which side of self that other is on relative
+    /// to self's surface normal (front side)
+    fn determine_side<T: Line>(&self, other: T) -> Side;
 }
 
 /// A seg is a portion of a linedef
@@ -103,7 +116,7 @@ impl Line for Seg {
 
     fn normal(&self) -> Vec3 {
         // Get the vector defining self based off of the first point
-        let line_vector = self.points().0 - self.points().1;
+        let line_vector = self.points().1 - self.points().0;
         // Rotate that vector using the y axis by 90 degrees
         let rotation = glam::Mat3::from_rotation_y(PI / 2f32);
         let perpendicular: Vec3 = rotation * line_vector;
@@ -113,6 +126,43 @@ impl Line for Seg {
 
     fn flip(&mut self) {
         swap(&mut self.points.0, &mut self.points.1);
+    }
+
+    fn determine_side<T: Line>(&self, other: T) -> Side {
+        // Evaluate a vector for self relative to the first point
+        let self_vec = (self.points.1 - self.points.0).normalize_or_zero();
+        // Evaluate a vector for both points of other relative
+        // to our first point
+        let other_0 = (other.points().0 - self.points.0).normalize_or_zero();
+        let other_1 = (other.points().1 - self.points.0).normalize_or_zero();
+        // Evaluate the cross products of self with both other points
+        let cross_0 = self_vec.cross(other_0);
+        let cross_1 = self_vec.cross(other_1);
+
+        // Both zero
+        if (cross_0.y, cross_1.y) == (0f32, 0f32) {
+            Side::Front
+        // One greater than zero, one equal to zero
+        } else if ((cross_0.y < 0f32) && (cross_1.y == 0f32))
+            || ((cross_0.y == 0f32) && (cross_1.y < 0f32))
+        {
+            Side::Back
+        // One less than zero, one equal to zero
+        } else if ((cross_0.y > 0f32) && (cross_1.y == 0f32))
+            || ((cross_0.y == 0f32) && (cross_1.y > 0f32))
+        {
+            Side::Front
+        // Both greater than zero
+        } else if (cross_0.y < 0f32) && (cross_1.y < 0f32) {
+            Side::Back
+        // Both less than zero
+        } else if (cross_0.y > 0f32) && (cross_1.y > 0f32) {
+            Side::Front
+        // If none of the previous cases, then must be one positive
+        // and one negative => Neither.
+        } else {
+            Side::Neither
+        }
     }
 }
 
@@ -222,11 +272,30 @@ mod tests {
 
     #[test]
     fn normal_swap() {
-        let (mut seg0, _, _, _) = init();
+        let (seg0, _, _, _) = init();
 
         let mut flip_seg0 = seg0.clone();
         flip_seg0.flip();
 
         assert!(seg0.normal() != flip_seg0.normal())
+    }
+
+    #[test]
+    fn front() {
+        let (seg0, seg1, _, _) = init();
+        assert!(seg0.determine_side(seg1) == Side::Front)
+    }
+
+    #[test]
+    fn back() {
+        let (mut seg0, seg1, _, _) = init();
+        seg0.flip();
+        assert!(seg0.determine_side(seg1) == Side::Back)
+    }
+
+    #[test]
+    fn neither() {
+        let (seg0, _, seg2, _) = init();
+        assert!(seg0.determine_side(seg2) == Side::Neither)
     }
 }
