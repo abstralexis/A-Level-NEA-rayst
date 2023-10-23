@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.75"
+binary-tree = { version = "0.1.0", path = "../binary-tree" }
 derive = "1.0.0"
 glam = { version = "0.24.2", features = ["serde"] }
 serde = { version = "1.0.189", features = ["rc", "derive"] }

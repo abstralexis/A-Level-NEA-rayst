@@ -23,9 +23,9 @@ pub type NodeRef<T> = Rc<RefCell<Node<T>>>;
 /// type.
 #[derive(Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize)]
 pub struct Node<T> {
-    value: T,
-    left: Option<NodeRef<T>>,
-    right: Option<NodeRef<T>>,
+    pub value: T,
+    pub left: Option<NodeRef<T>>,
+    pub right: Option<NodeRef<T>>,
 }
 impl<T> Node<T> {
     /// Create a single node node

@@ -1,9 +1,7 @@
-use std::{f32::consts::PI, mem::swap};
+//! The structs and functions for describing level geometry
 
-#[allow(unused_imports)]
-use anyhow::anyhow;
-use glam::Vec3;
-use serde::{Deserialize, Serialize};
+use std::{f32::consts::PI, mem::swap};
+use crate::*;
 
 /// Enum with types to represent the side
 /// determination that we need for
