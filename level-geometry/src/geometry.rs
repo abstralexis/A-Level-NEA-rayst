@@ -164,7 +164,7 @@ impl Line for Seg {
     }
 }
 
-mod tests {
+pub mod tests {
     use crate::geometry::*;
 
     /// An initialisation function for the tests so I do not
@@ -174,7 +174,7 @@ mod tests {
     /// the lengths could mean a bug occurs. We have now combatted this
     /// with a unit test for it and a fix to make the test pass.
     #[allow(dead_code)]
-    fn init() -> (Seg, Seg, Seg, Seg) {
+    pub fn init() -> (Seg, Seg, Seg, Seg) {
         let height = 10f32;
         (
             Seg::new(

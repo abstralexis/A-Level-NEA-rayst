@@ -77,3 +77,15 @@ fn front_back(segs: Vec<Seg>) -> NodeRef<Vec<Seg>> {
 
     segs_node.noderef()
 }
+
+pub mod tests {
+    use crate::partitioning::*;
+    use crate::geometry::tests::init;
+
+    #[test]
+    fn no_panic_sanity_check() {
+        let (mut seg0, mut seg1, mut seg2, mut seg3) = init();
+        let segvec = vec![seg0, seg1, seg2, seg3];
+        dbg!(front_back(segvec));
+    }   
+}

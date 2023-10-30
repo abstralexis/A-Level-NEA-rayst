@@ -87,7 +87,7 @@ impl<T> Node<T> {
 }
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use super::*;
 
     #[test]
