@@ -14,7 +14,7 @@ fn front_back(segs: Vec<Seg>) -> NodeRef<Vec<Seg>> {
     // overwrite a preexisting child.
     let mut segs_node = Node::new(segs);
 
-    segs_node.create_child(vec![], Direction::Left).unwrap();
+    segs_node.create_child(vec![segs_node.value[0]], Direction::Left).unwrap();
     segs_node.create_child(vec![], Direction::Right).unwrap();
 
     // Iterate over the root node's item, adding to each child
@@ -83,8 +83,8 @@ pub fn recursive_partition(seglists: Vec<Vec<Seg>>) -> Vec<Seg> {
     // iterate over the segs
     for segs in seglists {
         // if the length is 1 do not touch it
-        match segs.len() {
-            1usize => new_seglists.push(segs.clone()),
+        match segs.len()  {
+            0usize | 1usize => new_seglists.push(segs.clone()),
             _ => {
             // If length is not 1, we must partition, get the front and back then recurse
                 let partitioned = front_back(segs.to_owned()); 
@@ -124,5 +124,12 @@ pub mod tests {
         let (seg0, seg1, seg2, seg3) = init();
         let segvec = vec![seg0, seg1, seg2, seg3];
         dbg!(front_back(segvec));
-    }   
+    }
+
+    #[test]
+    fn recursive_panic_test() {
+        let (a, b, c, d) = init();
+        let segvecs = vec![vec![a, b, c, d]];
+        dbg!(recursive_partition(segvecs));
+    }
 }
