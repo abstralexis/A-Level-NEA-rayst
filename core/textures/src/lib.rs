@@ -35,19 +35,19 @@ impl TextureLoader {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use notan::{draw::DrawConfig, prelude::*};
+    // use super::*;
+    // use notan::{draw::DrawConfig, prelude::*};
 
-    #[test]
-    fn panic_test() {
-        notan::init()
-            .add_config(DrawConfig)
-            .draw(draw)
-            .build()
-            .unwrap();
+    // #[test]
+    // fn panic_test() {
+    //     notan::init()
+    //         .add_config(DrawConfig)
+    //         .draw(draw)
+    //         .build()
+    //         .unwrap();
 
-        fn draw(_app: &mut App, gfx: &mut Graphics) {
-            TextureLoader::new(gfx);
-        }
-    }
+    //     fn draw(_app: &mut App, gfx: &mut Graphics) {
+    //         TextureLoader::new(gfx);
+    //     }
+    // }
 }

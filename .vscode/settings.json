@@ -1,5 +1,11 @@
 {
     "rust-analyzer.linkedProjects": [
-        "./binary-tree/Cargo.toml"
+        "./binary-tree/Cargo.toml",
+        "./core/textures/Cargo.toml",
+        "./Cargo.toml",
+        "./Cargo.toml",
+        "./core/textures/Cargo.toml",
+        "./core/textures/Cargo.toml",
+        "./core/textures/Cargo.toml"
     ]
 }
