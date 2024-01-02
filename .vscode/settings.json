@@ -6,6 +6,7 @@
         "./Cargo.toml",
         "./core/textures/Cargo.toml",
         "./core/textures/Cargo.toml",
-        "./core/textures/Cargo.toml"
+        "./core/textures/Cargo.toml",
+        "./ray-me/Cargo.toml"
     ]
 }

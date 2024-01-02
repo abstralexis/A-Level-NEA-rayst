@@ -6,3 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+anyhow = "1.0.79"
+core = { path = "../core/" }
+glam = { version = "0.25.0", features = ["serde"] }
+notan = { version = "0.11.0", features = ["notan_egui", "serde", "save_file", "drop_files"] }
