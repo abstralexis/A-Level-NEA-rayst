@@ -13,7 +13,7 @@ use std::fs::read;
 
 #[allow(dead_code)]
 pub struct TextureLoader {
-    textures: HashMap<String, Texture>,
+    pub textures: HashMap<String, Texture>,
 }
 impl TextureLoader {
     pub fn new(gfx: &mut Graphics) -> Self {
