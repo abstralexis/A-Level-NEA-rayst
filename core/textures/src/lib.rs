@@ -9,7 +9,7 @@ pub const MISSING_TEX_PATH: &str = "./assets/missingtexture.png";
 use notan::app::Graphics;
 use notan::prelude::{Texture, TextureBuilder};
 use std::collections::HashMap;
-use std::fs::read;
+// use std::fs::read;
 
 #[allow(dead_code)]
 pub struct TextureLoader {
@@ -24,8 +24,16 @@ impl TextureLoader {
             .build()
             .expect("Texture Building Failed");
 
+        let rayme = TextureBuilder::new(gfx)
+            .from_image(
+                include_bytes!("./assets/rayme_logo.png")
+            )
+            .build()
+            .expect("Texture Building Failed");
+
         let mut textures = HashMap::new();
         textures.insert("missingtex".to_owned(), missingtex);
+        textures.insert("rayme".to_owned(), rayme);
 
         TextureLoader { textures }
     }

@@ -16,9 +16,13 @@ impl State {
 
 #[notan_main]
 fn main() -> Result<(), String> {
+    let logo = include_bytes!("../../core/textures/src/assets/rayme_logo.png");
+
     let win = WindowConfig::new()
         .set_vsync(true)
         .set_title("RayME - The Rayst Map Editor")
+        .set_window_icon_data(Some(logo))
+        .set_taskbar_icon_data(Some(logo))
         .set_lazy_loop(true)
         .set_high_dpi(true);
 
@@ -35,6 +39,7 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
         //     .from_image(include_bytes!("../../core/textures/src/assets/missingtexture.png"))
         //     .build().unwrap();
         let loader = TextureLoader::new(gfx);
+
         let missingtex = loader.textures.get("missingtex").unwrap();
         let s_missingtex = gfx.egui_register_texture(&missingtex);
 
@@ -46,6 +51,9 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
                 ui.label("This window lets you select the tools you need for making a map.");
                 ui.separator();
                 ui.image(s_missingtex);
+
+                ui.button("⬈")
+                    .on_hover_text("Line Drawer Parametric Interface")
             });
 
         egui::Window::new("Help")
