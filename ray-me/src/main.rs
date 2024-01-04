@@ -31,9 +31,11 @@ fn main() -> Result<(), String> {
 
 fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut State) {
     let mut output = plugins.egui(|ctx| {
-        let missingtex = gfx.create_texture()
-            .from_image(include_bytes!("../../core/textures/src/assets/missingtexture.png"))
-            .build().unwrap();
+        // let missingtex = gfx.create_texture()
+        //     .from_image(include_bytes!("../../core/textures/src/assets/missingtexture.png"))
+        //     .build().unwrap();
+        let loader = TextureLoader::new(gfx);
+        let missingtex = loader.textures.get("missingtex").unwrap();
         let s_missingtex = gfx.egui_register_texture(&missingtex);
 
         egui::Window::new("Tools")

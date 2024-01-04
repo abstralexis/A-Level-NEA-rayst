@@ -19,9 +19,7 @@ impl TextureLoader {
     pub fn new(gfx: &mut Graphics) -> Self {
         let missingtex = TextureBuilder::new(gfx)
             .from_image(
-                read(MISSING_TEX_PATH)
-                    .expect("Texture Loading Failed")
-                    .as_slice(),
+                include_bytes!("./assets/missingtexture.png")
             )
             .build()
             .expect("Texture Building Failed");
