@@ -1,15 +1,30 @@
 use notan::egui::{self, *};
 use notan::prelude::*;
 use core::textures::TextureLoader;
+use std::fmt::format;
 
 #[derive(AppState)]
 struct State {
     tools_open: bool,
+    l1_x: String,
+    l1_y: String,
+    l2_x: String,
+    l2_y: String,
+    line_bottom: String,
+    line_top: String,
+    line_editor_open: bool,
 }
 impl State {
     pub fn init() -> Self {
         State {
-            tools_open: true
+            tools_open: true,
+            l1_x: "0.0".to_owned(),
+            l1_y: "0.0".to_owned(),
+            l2_x: "0.0".to_owned(),
+            l2_y: "0.0".to_owned(),
+            line_bottom: "0.0".to_owned(),
+            line_top: "200.0".to_owned(),
+            line_editor_open: false,
         }
     }
 }
@@ -52,9 +67,75 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
                 ui.separator();
                 ui.image(s_missingtex);
 
-                ui.button("⬈")
-                    .on_hover_text("Line Drawer Parametric Interface")
+                if ui.button("⬈").on_hover_text("Line Drawer Parametric Interface").clicked() {
+                    state.line_editor_open = match state.line_editor_open {
+                        true => false,
+                        false => true,
+                    };
+                }
+
             });
+
+        if state.line_editor_open{
+            egui::Window::new("Parametric Line Drawer")
+                .default_width(200.0)
+                .resizable(false)
+                .show(&ctx, |ui| {
+                    ui.label("This window lets you specify line coordinates then draw them to the screen.");
+                    ui.separator();
+
+                    ui.label("Line first point x");
+                    ui.text_edit_singleline(&mut state.l1_x);
+                    if state.l1_x.parse::<f32>().is_err() {
+                        ui.colored_label(Color32::RED, "Coordinate must be a numeric value.");
+                    }
+
+                    ui.label("Line first point y");
+                    ui.text_edit_singleline(&mut state.l1_y);
+                    if state.l1_y.parse::<f32>().is_err() {
+                        ui.colored_label(Color32::RED, "Coordinate must be a numeric value.");
+                    }
+
+                    ui.label("Line second point x");
+                    ui.text_edit_singleline(&mut state.l2_x);
+                    if state.l2_x.parse::<f32>().is_err() {
+                        ui.colored_label(Color32::RED, "Coordinate must be a numeric value.");
+                    }
+
+                    ui.label("Line second point y");
+                    ui.text_edit_singleline(&mut state.l2_y);
+                    if state.l2_y.parse::<f32>().is_err() {
+                        ui.colored_label(Color32::RED, "Coordinate must be a numeric value.");
+                    }
+
+                    ui.label("Line bottom coordinate");
+                    ui.text_edit_singleline(&mut state.line_bottom);
+                    if state.line_bottom.parse::<f32>().is_err() {
+                        ui.colored_label(Color32::RED, "Coordinate must be a numeric value.");
+                    }
+
+                    ui.label("Line top coordinate");
+                    ui.text_edit_singleline(&mut state.line_top);
+                    if state.line_top.parse::<f32>().is_err() {
+                        ui.colored_label(Color32::RED, "Coordinate must be a numeric value.");
+                    }
+
+                    let mut button_enabled = true; 
+                    if {
+                        state.l1_x.parse::<f32>().is_err() |
+                        state.l1_y.parse::<f32>().is_err() |
+                        state.l2_x.parse::<f32>().is_err() |
+                        state.l2_y.parse::<f32>().is_err() |
+                        state.line_bottom.parse::<f32>().is_err() |
+                        state.line_top.parse::<f32>(). is_err()
+                    } {
+                        button_enabled = false;
+                        ui.colored_label(Color32::RED, "Please amend the above fields");
+                    }
+
+                    ui.add_enabled(button_enabled, egui::Button::new("Draw Line"));
+                });
+        }
 
         egui::Window::new("Help")
             .anchor(Align2::LEFT_BOTTOM, [0.0, 0.0])
