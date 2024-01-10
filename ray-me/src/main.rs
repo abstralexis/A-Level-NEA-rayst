@@ -1,6 +1,10 @@
+use notan::draw::{CreateDraw, DrawShapes, DrawConfig};
 use notan::egui::{self, *};
+use notan::math::Vec3;
+use notan::math::Vec3Swizzles;
 use notan::prelude::*;
 use core::textures::TextureLoader;
+use core::level_geometry::geometry::{Seg, Line};
 use std::fmt::format;
 
 #[derive(AppState)]
@@ -13,6 +17,7 @@ struct State {
     line_bottom: String,
     line_top: String,
     line_editor_open: bool,
+    lines: Vec<Seg>,
 }
 impl State {
     pub fn init() -> Self {
@@ -25,6 +30,7 @@ impl State {
             line_bottom: "0.0".to_owned(),
             line_top: "200.0".to_owned(),
             line_editor_open: false,
+            lines: vec![],
         }
     }
 }
@@ -44,11 +50,20 @@ fn main() -> Result<(), String> {
     notan::init_with(State::init)
         .add_config(win)
         .add_config(EguiConfig)
+        .add_config(DrawConfig)
         .draw(draw)
         .build()
 }
 
 fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut State) {
+    let mut line_renderer = gfx.create_draw();
+    for line in &state.lines {
+        let p1 = line.points().0.xy();
+        let p2 = line.points().1.xy();
+
+        line_renderer.line(p1.into(), p2.into()).color(Color::WHITE).width(2.0);
+    }
+    
     let mut output = plugins.egui(|ctx| {
         // let missingtex = gfx.create_texture()
         //     .from_image(include_bytes!("../../core/textures/src/assets/missingtexture.png"))
@@ -73,7 +88,6 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
                         false => true,
                     };
                 }
-
             });
 
         if state.line_editor_open{
@@ -120,20 +134,43 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
                         ui.colored_label(Color32::RED, "Coordinate must be a numeric value.");
                     }
 
-                    let mut button_enabled = true; 
-                    if {
+                    let is_invalid_line = {
                         state.l1_x.parse::<f32>().is_err() |
                         state.l1_y.parse::<f32>().is_err() |
                         state.l2_x.parse::<f32>().is_err() |
                         state.l2_y.parse::<f32>().is_err() |
                         state.line_bottom.parse::<f32>().is_err() |
-                        state.line_top.parse::<f32>(). is_err()
-                    } {
+                        state.line_top.parse::<f32>().is_err()
+                    };
+
+                    let mut button_enabled = true; 
+                    if is_invalid_line {
                         button_enabled = false;
                         ui.colored_label(Color32::RED, "Please amend the above fields");
                     }
 
-                    ui.add_enabled(button_enabled, egui::Button::new("Draw Line"));
+                    if ui.add_enabled(
+                        button_enabled, 
+                        egui::Button::new("Draw Line")
+                    ).clicked() { 
+                        let fl1_x = state.l1_x.parse::<f32>().unwrap();
+                        let fl1_y = state.l1_y.parse::<f32>().unwrap();
+                        let fl2_x = state.l2_x.parse::<f32>().unwrap();
+                        let fl2_y = state.l2_y.parse::<f32>().unwrap();
+                        let fl_bottom = state.line_bottom.parse::<f32>().unwrap();
+                        let fl_top = state.line_top.parse::<f32>().unwrap();
+
+                        let line = Seg::new(
+                            (
+                                Vec3::from((fl1_x, fl1_y, fl_bottom)),
+                                Vec3::from((fl2_x, fl2_y, fl_bottom))
+                            ), 
+                            fl_top - fl_bottom
+                        );
+
+                        state.lines.push(line);
+                        println!("{:?}", state.lines)
+                    }
                 });
         }
 
@@ -174,9 +211,10 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
             });
     });
 
-    output.clear_color(Color::BLACK);
+    line_renderer.clear(Color::BLACK);
 
     if output.needs_repaint() {
+        gfx.render(&line_renderer);
         gfx.render(&output);
     }
 }
