@@ -108,7 +108,6 @@ fn front_back(segs: Vec<Seg>) -> NodeRef<Vec<Seg>> {
                 }
             },
         }
-
         return segs_node.noderef()
     }
 
@@ -238,7 +237,7 @@ pub fn non_recursive_partition(initial_segs: Vec<Seg>) -> Vec<Seg> {
 
             let back = partitioned
                 .borrow()
-                .get_child_reference(Direction::Left)
+                .get_child_reference(Direction::Right)
                 .unwrap()
                 .borrow()
                 .value.clone();

@@ -3,14 +3,11 @@ use notan::egui::{self, *};
 use notan::math::Vec3;
 use notan::math::Vec3Swizzles;
 use notan::prelude::*;
-use core::textures::TextureLoader;
 use core::level_geometry::geometry::{Seg, Line};
-use serde::{Serializer, Deserializer};
 use serde_json;
-use rfd::{FileDialog, FileHandle};
-use std::fmt::format;
 use std::fs::{write, read};
 use std::io::BufReader;
+use core::level_geometry::partitioning::non_recursive_partition;
 
 #[derive(AppState)]
 struct State {
@@ -156,8 +153,38 @@ fn menu_bar(ctx: &Context, state: &mut State) {
             });
 
             ui.menu_button("Compile", |ui| {
-                ui.button("Compile");
-                ui.button("Compile As...")
+                if ui.button("Compile").clicked() {
+                    let file_dialog = rfd::FileDialog::new();
+                    let path = file_dialog.save_file();
+                    match path {
+                        None => {
+                            egui::Window::new("Error E001")
+                                .collapsible(false)
+                                .resizable(false)
+                                .show(&ctx, |ui| {
+                                    ui.colored_label(Color32::RED, "An error occured getting path.");
+                                });
+                        },
+                        Some(path) => {
+                            ui.spinner();
+                            let partitioned = non_recursive_partition(state.lines.clone());
+                            println!("{:?}", &partitioned); // dbg
+                            let json = serde_json::to_string_pretty(&partitioned);
+                            println!("{:?}", &json); // dbg
+                            match write(path, json.unwrap()) {
+                                Ok(_) => (),
+                                Err(_) => {
+                                    egui::Window::new("Error E004")
+                                        .collapsible(false)
+                                        .resizable(false)
+                                        .show(&ctx, |ui| {
+                                            ui.colored_label(Color32::RED, "Compilation error")
+                                        });
+                                }
+                            }
+                        }
+                    }
+                };
             });
         });
     });
