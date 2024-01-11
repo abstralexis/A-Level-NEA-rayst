@@ -73,6 +73,25 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
         let missingtex = loader.textures.get("missingtex").unwrap();
         let s_missingtex = gfx.egui_register_texture(&missingtex);
 
+        egui::TopBottomPanel::top("File Options Banner")
+            .resizable(false)
+            .exact_height(20.0)
+            .show(&ctx, |ui| {
+                ui.with_layout(egui::Layout::left_to_right(Align::Center), |ui| {
+                    ui.menu_button("File", |ui| {
+                        ui.button("New");
+                        ui.button("Save");
+                        ui.button("Save As...");
+                        ui.button("Open");
+                    });
+    
+                    ui.menu_button("Compile", |ui| {
+                        ui.button("Compile");
+                        ui.button("Compile As...")
+                    });
+                });
+            });
+
         egui::Window::new("Tools")
             .anchor(Align2::LEFT_TOP, [0.0, 0.0])
             .default_width(200.0)
@@ -169,7 +188,6 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
                         );
 
                         state.lines.push(line);
-                        println!("{:?}", state.lines)
                     }
                 });
         }
