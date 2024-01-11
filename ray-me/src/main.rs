@@ -5,7 +5,11 @@ use notan::math::Vec3Swizzles;
 use notan::prelude::*;
 use core::textures::TextureLoader;
 use core::level_geometry::geometry::{Seg, Line};
+use serde::{Serializer, Deserializer};
+use serde_json;
+use rfd::{FileDialog, FileHandle};
 use std::fmt::format;
+use std::fs::write;
 
 #[derive(AppState)]
 struct State {
@@ -62,7 +66,6 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
     for line in &state.lines {
         let p1 = line.points().0.xy();
         let p2 = line.points().1.xy();
-
         line_renderer.line(p1.into(), p2.into()).color(Color::WHITE).width(2.0);
     }
     
@@ -85,6 +88,8 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
 }
 
 fn menu_bar(ctx: &Context, state: &mut State) {
+    let file_dialog = rfd::FileDialog::new();
+
     egui::TopBottomPanel::top("File Options Banner")
     .resizable(false)
     .exact_height(20.0)
@@ -92,7 +97,23 @@ fn menu_bar(ctx: &Context, state: &mut State) {
         ui.with_layout(egui::Layout::left_to_right(Align::Center), |ui| {
             ui.menu_button("File", |ui| {
                 ui.button("New");
-                ui.button("Save");
+                if ui.button("Save").clicked() {
+                    let path = file_dialog.save_file();
+                    match path {
+                        None => {
+                            egui::Window::new("Error E001")
+                                .collapsible(false)
+                                .resizable(false)
+                                .show(&ctx, |ui| {
+                                    ui.colored_label(Color32::RED, "An error occured.");
+                                });
+                        },
+                        Some(path) => {
+                            let json = serde_json::to_string_pretty(&state.lines).unwrap();
+
+                        }
+                    }
+                };
                 ui.button("Save As...");
                 ui.button("Open");
             });
