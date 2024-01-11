@@ -9,7 +9,8 @@ use serde::{Serializer, Deserializer};
 use serde_json;
 use rfd::{FileDialog, FileHandle};
 use std::fmt::format;
-use std::fs::write;
+use std::fs::{write, read};
+use std::io::BufReader;
 
 #[derive(AppState)]
 struct State {
@@ -88,8 +89,6 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
 }
 
 fn menu_bar(ctx: &Context, state: &mut State) {
-    let file_dialog = rfd::FileDialog::new();
-
     egui::TopBottomPanel::top("File Options Banner")
     .resizable(false)
     .exact_height(20.0)
@@ -98,6 +97,7 @@ fn menu_bar(ctx: &Context, state: &mut State) {
             ui.menu_button("File", |ui| {
                 ui.button("New");
                 if ui.button("Save").clicked() {
+                    let file_dialog = rfd::FileDialog::new();
                     let path = file_dialog.save_file();
                     match path {
                         None => {
@@ -105,17 +105,54 @@ fn menu_bar(ctx: &Context, state: &mut State) {
                                 .collapsible(false)
                                 .resizable(false)
                                 .show(&ctx, |ui| {
-                                    ui.colored_label(Color32::RED, "An error occured.");
+                                    ui.colored_label(Color32::RED, "An error occured getting path.");
                                 });
                         },
                         Some(path) => {
                             let json = serde_json::to_string_pretty(&state.lines).unwrap();
-
+                            match write(path, json) {
+                                Ok(_) => (),
+                                Err(_) => {egui::Window::new("Error E002")
+                                    .collapsible(false)
+                                    .resizable(false)
+                                    .show(&ctx, |ui| {
+                                        ui.colored_label(Color32::RED, "File save failed")
+                                    });},
+                            }
                         }
                     }
                 };
-                ui.button("Save As...");
-                ui.button("Open");
+                if ui.button("Open").clicked() {
+                    let file_dialog = rfd::FileDialog::new();
+                    let path = file_dialog.pick_file();
+                    match path {
+                        None => {
+                            egui::Window::new("Error E003")
+                                .collapsible(false)
+                                .resizable(false)
+                                .show(&ctx, |ui| {
+                                    ui.colored_label(Color32::RED, "File select failed")
+                                });
+                        },
+                        Some(path) => {
+                            match read(path) {
+                                Ok(data) => {
+                                    let reader = BufReader::new(data.as_slice());
+                                    let segs: Vec<Seg> = serde_json::from_reader(reader).unwrap();
+                                    state.lines = segs;
+                                },
+                                Err(_) => {
+                                    egui::Window::new("Error E003")
+                                        .collapsible(false)
+                                        .resizable(false)
+                                        .show(&ctx, |ui| {
+                                            ui.colored_label(Color32::RED, "File load failed")
+                                        });
+                                }
+                            }
+                        }
+                    }
+                };
             });
 
             ui.menu_button("Compile", |ui| {
