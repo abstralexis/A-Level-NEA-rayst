@@ -18,6 +18,7 @@ struct State {
     line_top: String,
     line_editor_open: bool,
     lines: Vec<Seg>,
+    changes_saved: bool,
 }
 impl State {
     pub fn init() -> Self {
@@ -31,6 +32,7 @@ impl State {
             line_top: "200.0".to_owned(),
             line_editor_open: false,
             lines: vec![],
+            changes_saved: false,
         }
     }
 }
@@ -65,168 +67,13 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
     }
     
     let mut output = plugins.egui(|ctx| {
-        // let missingtex = gfx.create_texture()
-        //     .from_image(include_bytes!("../../core/textures/src/assets/missingtexture.png"))
-        //     .build().unwrap();
-        let loader = TextureLoader::new(gfx);
-
-        let missingtex = loader.textures.get("missingtex").unwrap();
-        let s_missingtex = gfx.egui_register_texture(&missingtex);
-
-        egui::TopBottomPanel::top("File Options Banner")
-            .resizable(false)
-            .exact_height(20.0)
-            .show(&ctx, |ui| {
-                ui.with_layout(egui::Layout::left_to_right(Align::Center), |ui| {
-                    ui.menu_button("File", |ui| {
-                        ui.button("New");
-                        ui.button("Save");
-                        ui.button("Save As...");
-                        ui.button("Open");
-                    });
-    
-                    ui.menu_button("Compile", |ui| {
-                        ui.button("Compile");
-                        ui.button("Compile As...")
-                    });
-                });
-            });
-
-        egui::Window::new("Tools")
-            .anchor(Align2::LEFT_TOP, [0.0, 0.0])
-            .default_width(200.0)
-            .resizable(true)
-            .show(&ctx, |ui| {
-                ui.label("This window lets you select the tools you need for making a map.");
-                ui.separator();
-                ui.image(s_missingtex);
-
-                if ui.button("⬈").on_hover_text("Line Drawer Parametric Interface").clicked() {
-                    state.line_editor_open = match state.line_editor_open {
-                        true => false,
-                        false => true,
-                    };
-                }
-            });
-
-        if state.line_editor_open{
-            egui::Window::new("Parametric Line Drawer")
-                .default_width(200.0)
-                .resizable(false)
-                .show(&ctx, |ui| {
-                    ui.label("This window lets you specify line coordinates then draw them to the screen.");
-                    ui.separator();
-
-                    ui.label("Line first point x");
-                    ui.text_edit_singleline(&mut state.l1_x);
-                    if state.l1_x.parse::<f32>().is_err() {
-                        ui.colored_label(Color32::RED, "Coordinate must be a numeric value.");
-                    }
-
-                    ui.label("Line first point y");
-                    ui.text_edit_singleline(&mut state.l1_y);
-                    if state.l1_y.parse::<f32>().is_err() {
-                        ui.colored_label(Color32::RED, "Coordinate must be a numeric value.");
-                    }
-
-                    ui.label("Line second point x");
-                    ui.text_edit_singleline(&mut state.l2_x);
-                    if state.l2_x.parse::<f32>().is_err() {
-                        ui.colored_label(Color32::RED, "Coordinate must be a numeric value.");
-                    }
-
-                    ui.label("Line second point y");
-                    ui.text_edit_singleline(&mut state.l2_y);
-                    if state.l2_y.parse::<f32>().is_err() {
-                        ui.colored_label(Color32::RED, "Coordinate must be a numeric value.");
-                    }
-
-                    ui.label("Line bottom coordinate");
-                    ui.text_edit_singleline(&mut state.line_bottom);
-                    if state.line_bottom.parse::<f32>().is_err() {
-                        ui.colored_label(Color32::RED, "Coordinate must be a numeric value.");
-                    }
-
-                    ui.label("Line top coordinate");
-                    ui.text_edit_singleline(&mut state.line_top);
-                    if state.line_top.parse::<f32>().is_err() {
-                        ui.colored_label(Color32::RED, "Coordinate must be a numeric value.");
-                    }
-
-                    let is_invalid_line = {
-                        state.l1_x.parse::<f32>().is_err() |
-                        state.l1_y.parse::<f32>().is_err() |
-                        state.l2_x.parse::<f32>().is_err() |
-                        state.l2_y.parse::<f32>().is_err() |
-                        state.line_bottom.parse::<f32>().is_err() |
-                        state.line_top.parse::<f32>().is_err()
-                    };
-
-                    let mut button_enabled = true; 
-                    if is_invalid_line {
-                        button_enabled = false;
-                        ui.colored_label(Color32::RED, "Please amend the above fields");
-                    }
-
-                    if ui.add_enabled(
-                        button_enabled, 
-                        egui::Button::new("Draw Line")
-                    ).clicked() { 
-                        let fl1_x = state.l1_x.parse::<f32>().unwrap();
-                        let fl1_y = state.l1_y.parse::<f32>().unwrap();
-                        let fl2_x = state.l2_x.parse::<f32>().unwrap();
-                        let fl2_y = state.l2_y.parse::<f32>().unwrap();
-                        let fl_bottom = state.line_bottom.parse::<f32>().unwrap();
-                        let fl_top = state.line_top.parse::<f32>().unwrap();
-
-                        let line = Seg::new(
-                            (
-                                Vec3::from((fl1_x, fl1_y, fl_bottom)),
-                                Vec3::from((fl2_x, fl2_y, fl_bottom))
-                            ), 
-                            fl_top - fl_bottom
-                        );
-
-                        state.lines.push(line);
-                    }
-                });
+        menu_bar(&ctx, state);
+        tools_window(&ctx, state);
+        if state.line_editor_open {
+            line_editor_window(&ctx, state)
         }
-
-        egui::Window::new("Help")
-            .anchor(Align2::LEFT_BOTTOM, [0.0, 0.0])
-            .default_width(200.0)
-            .resizable(true)
-            .show(&ctx, |ui| {
-                ui.label("This is the help section of the editor. Use me if you get stuck!");
-                ui.separator();
-
-                use notan::egui::special_emojis::GITHUB;
-                ui.hyperlink_to(
-                    format!("{GITHUB} Github"), 
-                    "https://github.com/AlexisComix/A-Level-NEA"
-                );
-            });
-
-        egui::Window::new("Assets")
-            .anchor(Align2::RIGHT_TOP, [0.0, 0.0])
-            .default_width(200.0)
-            .resizable(true)
-            .show(&ctx, |ui| {
-                ui.label("This is the area where you can select assets and put them down.");
-                ui.separator();
-                ui.collapsing("Behaviour", |ui| {
-                    ui.label("This is the section where the Entity Behaviour Code is.");
-                });
-                ui.collapsing("Textures", |ui| {
-                    ui.label("This is where the textures library is.");
-                });
-                ui.collapsing("Entities", |ui| {
-                    ui.label("This is where the Entity Parts are put together.");
-                    ui.separator();
-                    ui.button("Create New");
-                });
-                ui.collapsing("Audio", |_| {});
-            });
+        help_window(&ctx);
+        assets_window(&ctx, state);
     });
 
     line_renderer.clear(Color::BLACK);
@@ -235,4 +82,166 @@ fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, state: &mut St
         gfx.render(&line_renderer);
         gfx.render(&output);
     }
+}
+
+fn menu_bar(ctx: &Context, state: &mut State) {
+    egui::TopBottomPanel::top("File Options Banner")
+    .resizable(false)
+    .exact_height(20.0)
+    .show(&ctx, |ui| {
+        ui.with_layout(egui::Layout::left_to_right(Align::Center), |ui| {
+            ui.menu_button("File", |ui| {
+                ui.button("New");
+                ui.button("Save");
+                ui.button("Save As...");
+                ui.button("Open");
+            });
+
+            ui.menu_button("Compile", |ui| {
+                ui.button("Compile");
+                ui.button("Compile As...")
+            });
+        });
+    });
+}
+
+fn tools_window(ctx: &Context, state: &mut State) {
+    egui::Window::new("Tools")
+    .anchor(Align2::LEFT_TOP, [0.0, 0.0])
+    .default_width(200.0)
+    .resizable(true)
+    .show(&ctx, |ui| {
+        ui.label("This window lets you select the tools you need for making a map.");
+        ui.separator();
+
+        if ui.button("⬈").on_hover_text("Line Drawer Parametric Interface").clicked() {
+            state.line_editor_open = match state.line_editor_open {
+                true => false,
+                false => true,
+            };
+        }
+    });
+}
+
+fn line_editor_window(ctx: &Context, state: &mut State) {
+    egui::Window::new("Parametric Line Drawer")
+    .default_width(200.0)
+    .resizable(false)
+    .show(&ctx, |ui| {
+        ui.label("This window lets you specify line coordinates then draw them to the screen.");
+        ui.separator();
+
+        ui.label("Line first point x");
+        ui.text_edit_singleline(&mut state.l1_x);
+        if state.l1_x.parse::<f32>().is_err() {
+            ui.colored_label(Color32::RED, "Coordinate must be a numeric value.");
+        }
+
+        ui.label("Line first point y");
+        ui.text_edit_singleline(&mut state.l1_y);
+        if state.l1_y.parse::<f32>().is_err() {
+            ui.colored_label(Color32::RED, "Coordinate must be a numeric value.");
+        }
+
+        ui.label("Line second point x");
+        ui.text_edit_singleline(&mut state.l2_x);
+        if state.l2_x.parse::<f32>().is_err() {
+            ui.colored_label(Color32::RED, "Coordinate must be a numeric value.");
+        }
+
+        ui.label("Line second point y");
+        ui.text_edit_singleline(&mut state.l2_y);
+        if state.l2_y.parse::<f32>().is_err() {
+            ui.colored_label(Color32::RED, "Coordinate must be a numeric value.");
+        }
+
+        ui.label("Line bottom coordinate");
+        ui.text_edit_singleline(&mut state.line_bottom);
+        if state.line_bottom.parse::<f32>().is_err() {
+            ui.colored_label(Color32::RED, "Coordinate must be a numeric value.");
+        }
+
+        ui.label("Line top coordinate");
+        ui.text_edit_singleline(&mut state.line_top);
+        if state.line_top.parse::<f32>().is_err() {
+            ui.colored_label(Color32::RED, "Coordinate must be a numeric value.");
+        }
+
+        let is_invalid_line = {
+            state.l1_x.parse::<f32>().is_err() |
+            state.l1_y.parse::<f32>().is_err() |
+            state.l2_x.parse::<f32>().is_err() |
+            state.l2_y.parse::<f32>().is_err() |
+            state.line_bottom.parse::<f32>().is_err() |
+            state.line_top.parse::<f32>().is_err()
+        };
+
+        let mut button_enabled = true; 
+        if is_invalid_line {
+            button_enabled = false;
+            ui.colored_label(Color32::RED, "Please amend the above fields");
+        }
+
+        if ui.add_enabled(
+            button_enabled, 
+            egui::Button::new("Draw Line")
+        ).clicked() { 
+            let fl1_x = state.l1_x.parse::<f32>().unwrap();
+            let fl1_y = state.l1_y.parse::<f32>().unwrap();
+            let fl2_x = state.l2_x.parse::<f32>().unwrap();
+            let fl2_y = state.l2_y.parse::<f32>().unwrap();
+            let fl_bottom = state.line_bottom.parse::<f32>().unwrap();
+            let fl_top = state.line_top.parse::<f32>().unwrap();
+
+            let line = Seg::new(
+                (
+                    Vec3::from((fl1_x, fl1_y, fl_bottom)),
+                    Vec3::from((fl2_x, fl2_y, fl_bottom))
+                ), 
+                fl_top - fl_bottom
+            );
+
+            state.lines.push(line);
+        }
+    });
+}
+
+fn help_window(ctx: &Context) {
+    egui::Window::new("Help")
+    .anchor(Align2::LEFT_BOTTOM, [0.0, 0.0])
+    .default_width(200.0)
+    .resizable(true)
+    .show(&ctx, |ui| {
+        ui.label("This is the help section of the editor. Use me if you get stuck!");
+        ui.separator();
+
+        use notan::egui::special_emojis::GITHUB;
+        ui.hyperlink_to(
+            format!("{GITHUB} Github"), 
+            "https://github.com/AlexisComix/A-Level-NEA"
+        );
+    });
+}
+
+fn assets_window(ctx: &Context, state: &mut State) {
+    egui::Window::new("Assets")
+        .anchor(Align2::RIGHT_TOP, [0.0, 0.0])
+        .default_width(200.0)
+        .resizable(true)
+        .show(&ctx, |ui| {
+            ui.label("This is the area where you can select assets and put them down.");
+            ui.separator();
+            ui.collapsing("Behaviour", |ui| {
+                ui.label("This is the section where the Entity Behaviour Code is.");
+            });
+            ui.collapsing("Textures", |ui| {
+                ui.label("This is where the textures library is.");
+            });
+            ui.collapsing("Entities", |ui| {
+                ui.label("This is where the Entity Parts are put together.");
+                ui.separator();
+                ui.button("Create New");
+            });
+            ui.collapsing("Audio", |_| {});
+        });
 }
