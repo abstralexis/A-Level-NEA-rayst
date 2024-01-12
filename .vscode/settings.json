@@ -4,6 +4,8 @@
         "core/level-geometry/Cargo.toml",
         "core/binary-tree/Cargo.toml",
         "core/textures/Cargo.toml",
-        "ray-me/Cargo.toml"
+        "ray-me/Cargo.toml",
+        "rayst-engine/Cargo.toml",
+        "./rayst-engine/Cargo.toml"
     ]
 }
