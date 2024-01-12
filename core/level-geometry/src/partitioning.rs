@@ -213,9 +213,11 @@ fn front_back(segs: Vec<Seg>) -> NodeRef<Vec<Seg>> {
 pub fn non_recursive_partition(initial_segs: Vec<Seg>) -> Vec<Seg> {
     let mut segsvec = vec![initial_segs];
     let mut flag = true;
+    let mut iterations = 0;
     
     // Flag while loop
-    while flag {
+    while flag && iterations <= 100 {
+        iterations = iterations + 1;
         let mut newsegsvec: Vec<Vec<Seg>> = vec![];
         flag = false;
 
