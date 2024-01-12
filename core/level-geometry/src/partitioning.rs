@@ -256,7 +256,11 @@ pub fn non_recursive_partition(initial_segs: Vec<Seg>) -> Vec<Seg> {
     segsvec.iter().fold(vec![], |acc: Vec<Seg>, segs| {
         match segs.len() {
             0usize => acc,
-            _ => { let mut new = acc.clone(); new.push(segs[0]); new }
+            _ => { 
+                let mut new = acc.clone(); 
+                new.append(&mut segs.clone()); 
+                new 
+            }
         }
     })
 }

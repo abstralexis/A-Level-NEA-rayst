@@ -168,9 +168,7 @@ fn menu_bar(ctx: &Context, state: &mut State) {
                         Some(path) => {
                             ui.spinner();
                             let partitioned = non_recursive_partition(state.lines.clone());
-                            println!("{:?}", &partitioned); // dbg
                             let json = serde_json::to_string_pretty(&partitioned);
-                            println!("{:?}", &json); // dbg
                             match write(path, json.unwrap()) {
                                 Ok(_) => (),
                                 Err(_) => {
