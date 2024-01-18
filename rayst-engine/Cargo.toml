@@ -10,6 +10,6 @@ anyhow = "1.0.79"
 core = { path = "../core/" }
 glam = { version = "0.25.0", features = ["serde"] }
 notan = { version = "0.11.0", features = ["egui", "serde", "save_file", "drop_files"] }
-rfd = "0.12.1"
+rfd = "0.13.0"
 serde = "1.0.195"
 serde_json = "1.0.111"
