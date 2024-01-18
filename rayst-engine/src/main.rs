@@ -1,7 +1,12 @@
 use notan::prelude::*;
 
-mod game;
-use game::*;
+mod weapons;
+mod entities;
+mod animation;
+
+use crate::weapons::*;
+use crate::entities::*;
+use crate::animation::*;
 
 struct State {
     clear_options: ClearOptions,
