@@ -67,6 +67,7 @@ mod example_entities {
         pos: Vec3,
         angle_deg: f32,
     }
+
     impl NonPlayerEntity for DOOMCacodemon {
         fn get_pos(&self) -> notan::math::Vec3 {
             self.pos
@@ -94,6 +95,24 @@ mod example_entities {
 
         fn is_attacking(&self) -> bool {
             todo!()
+        }
+    }
+
+    impl Animated for DOOMCacodemon {
+        fn idle_animation(&self) -> Animation {
+            vec![Box::new(*include_bytes!("./assets/doom_cacodemon.png"))]
+        }
+
+        fn attack_animation(&self) -> Animation {
+            self.idle_animation()
+        }
+
+        fn reload_animation(&self) -> Animation {
+            self.idle_animation()
+        }
+
+        fn walk_animation(&self) -> Animation {
+            self.idle_animation()
         }
     }
 }

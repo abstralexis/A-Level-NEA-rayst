@@ -46,7 +46,7 @@ mod example_weapons {
 
     impl Animated for Pistol {
         fn idle_animation(&self) -> Animation {
-            vec![Box::new(*include_bytes!("./assets/doom_cacodemon.png"))]
+            vec![Box::new(*include_bytes!("./assets/pistol_idle.png"))]
         }
 
         fn walk_animation(&self) -> Animation {
