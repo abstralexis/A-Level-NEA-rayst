@@ -22,7 +22,7 @@ pub trait Weapon {
     fn get_attack(&self) -> Attack;
 }
 
-mod example_weapons {
+pub mod example_weapons {
     use std::f32::consts::PI;
     use crate::{animation::*, *};
     pub struct Pistol;

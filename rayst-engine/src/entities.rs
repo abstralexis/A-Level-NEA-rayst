@@ -37,8 +37,8 @@ pub trait NonPlayerEntity {
 /// Rayst engine Player structure. Stores information
 /// relevant to the exact player.
 pub struct Player {
-    pos: Vec3,
-    angle_deg: f32,
+    pub pos: Vec3,
+    pub angle_deg: f32,
     pub weapon: Box<dyn Weapon>
 }
 
